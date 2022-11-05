@@ -1,5 +1,6 @@
 import create from 'zustand'
 import { StoreApi } from 'zustand/vanilla'
+import { UseBoundStore } from 'zustand/esm/react'
 
 const ucFirst = (value: string) => value.charAt(0).toUpperCase() + value.slice(1)
 
@@ -22,14 +23,21 @@ const createState = (initState: InitStateType, set: StoreApi<InitStateType>['set
   return state
 }
 
-export const simpleZustandCreate = <T extends InitStateType>(initState: T) => {
-  const store = create<SimpleZustandType<T>>((set) => createState(initState, set))
+const createHooks = <T extends InitStateType>(
+  initState: InitStateType,
+  store: UseBoundStore<StoreApi<SimpleZustandType<T>>>
+) => {
   const hooks: Record<string, any> = {}
   for (const key of Object.keys(initState)) {
     hooks['use' + ucFirst(key)] = () => [store((state) => state[key]), store.getState()['set' + ucFirst(key)]]
   }
+  return hooks as SimpleZustandHooksType<T>
+}
+
+export const simpleZustandCreate = <T extends InitStateType>(initState: T) => {
+  const store = create<SimpleZustandType<T>>((set) => createState(initState, set))
   return {
     store,
-    hooks: hooks as SimpleZustandHooksType<T>
+    hooks: createHooks<T>(initState, store)
   }
 }
