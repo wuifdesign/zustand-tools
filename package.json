@@ -1,0 +1,69 @@
+{
+  "name": "zustand-tools",
+  "version": "0.0.1",
+  "description": "Tools for simple zustand usage",
+  "author": "wuifdesign",
+  "license": "MIT",
+  "repository": "https://github.com/wuifdesign/zustand-tools",
+  "main": "dist/index.js",
+  "source": "src/lib/index.tsx",
+  "typings": "dist/index.d.ts",
+  "sideEffects": [
+    "dist/*"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prepare": "husky install",
+    "build": "npm run clear-dist && npm run babel && npm run ts-declaration",
+    "clear-dist": "rimraf dist",
+    "babel": "babel --extensions .ts,.tsx src/lib --out-dir dist",
+    "ts-declaration": "tsc src/lib/index.tsx --declaration --emitDeclarationOnly --jsx react --esModuleInterop --outDir dist --skipLibCheck",
+    "start-react-app": "react-scripts start",
+    "test": "npm run test:unit && npm run test:lint",
+    "test:unit": "react-scripts test --ci --watchAll=false",
+    "test:lint": "eslint \"./src/**/*.{js,ts,tsx}\""
+  },
+  "dependencies": {
+    "zustand": "^4.1.4"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.19.3",
+    "@babel/core": "^7.20.2",
+    "@babel/preset-react": "^7.18.6",
+    "@babel/preset-typescript": "^7.18.6",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^14.4.3",
+    "@types/jest": "^29.2.2",
+    "@types/node": "^18.11.9",
+    "@types/react": "^18.0.25",
+    "@types/react-dom": "^18.0.8",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-config-standard-react": "^12.0.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-promise": "^6.1.1",
+    "husky": "^8.0.1",
+    "prettier": "^2.7.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.8.4",
+    "web-vitals": "^3.0.4",
+    "webpack": "5.74.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
