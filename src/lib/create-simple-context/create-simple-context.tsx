@@ -10,9 +10,9 @@ export const createSimpleContext = <T extends InitStateType>(
 ) => {
   const StoreContext = createContext<UseBoundStoreType<T>>(null as any)
 
-  const Provider: React.FC<{ initialValues: DeepPartial<T>; children: React.ReactNode }> = ({
+  const Provider: React.FC<{ initialValues?: DeepPartial<T>; children: React.ReactNode }> = ({
     children,
-    initialValues
+    initialValues = {}
   }) => {
     const store = useRef<UseBoundStoreType<T>>()
     if (!store.current) {

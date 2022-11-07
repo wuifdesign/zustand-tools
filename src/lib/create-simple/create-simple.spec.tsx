@@ -3,14 +3,14 @@ import { act, renderHook } from '@testing-library/react'
 
 describe('createSimple', () => {
   it('should export getter and setter', () => {
-    const { store } = createSimple({
+    const { getState } = createSimple({
       foo: 1,
       bar: 2
     })
-    expect(store.getState().foo).toBe(1)
-    expect(store.getState().bar).toBe(2)
-    store.getState().setFoo(3)
-    expect(store.getState().foo).toBe(3)
+    expect(getState().foo).toBe(1)
+    expect(getState().bar).toBe(2)
+    getState().setFoo(3)
+    expect(getState().foo).toBe(3)
   })
 
   it('should export hooks', () => {

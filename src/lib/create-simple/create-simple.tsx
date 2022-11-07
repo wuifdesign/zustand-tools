@@ -5,7 +5,7 @@ import { createStore } from '../utils/create-store'
 export const createSimple = <T extends InitStateType>(initState: T, middlewares: MiddlewareType<T>[] = []) => {
   const store = createStore(initState, middlewares)
   return {
-    store,
+    ...store,
     hooks: createHooksObject<T>({ initState, store })
   }
 }
