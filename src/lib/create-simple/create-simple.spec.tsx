@@ -1,7 +1,24 @@
 import { createSimple } from './create-simple'
 import { act, renderHook } from '@testing-library/react'
+import { MiddlewareType } from '../types'
+
+const middlewareMock = jest.fn()
+
+const demoMiddleware: MiddlewareType = (config, value) => (set, get, api) =>
+  config(
+    (args) => {
+      middlewareMock(value)
+      set(args)
+    },
+    get,
+    api
+  )
 
 describe('createSimple', () => {
+  beforeEach(() => {
+    middlewareMock.mockReset()
+  })
+
   it('should export getter and setter', () => {
     const { getState } = createSimple({
       foo: 1,
@@ -21,5 +38,18 @@ describe('createSimple', () => {
       result.current[1](5)
     })
     expect(result.current[0]).toBe(5)
+  })
+
+  it('should create with middleware', () => {
+    const { getState } = createSimple(
+      { foo: 1 },
+      { middlewares: [(initializer) => demoMiddleware(initializer, 'TestValue')] }
+    )
+    expect(middlewareMock).toBeCalledTimes(0)
+    expect(getState().foo).toBe(1)
+    getState().setFoo(3)
+    expect(getState().foo).toBe(3)
+    expect(middlewareMock).toBeCalledTimes(1)
+    expect(middlewareMock).toBeCalledWith('TestValue')
   })
 })

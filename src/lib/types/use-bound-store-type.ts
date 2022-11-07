@@ -1,5 +1,4 @@
-import { StoreApi } from 'zustand/vanilla'
-import { UseBoundStore } from 'zustand/react'
+import { StoreApi, UseBoundStore } from 'zustand'
 import { CreateSimpleType } from './create-simple-type'
 import { InitStateType } from './init-state-type'
 

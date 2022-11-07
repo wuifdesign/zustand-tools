@@ -1,4 +1,6 @@
-import { StateCreator } from 'zustand/esm/vanilla'
-import { InitStateType } from './init-state-type'
+import { StateCreator, StoreApi } from 'zustand'
 
-export type MiddlewareType<T extends InitStateType> = (initializer: StateCreator<T>) => StateCreator<T, any, any>
+export type MiddlewareType<T extends any = any> = (
+  config: StateCreator<T>,
+  options: any
+) => (set: StoreApi<T>['setState'], get: StoreApi<T>['getState'], api: StoreApi<T>) => T

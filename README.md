@@ -46,13 +46,13 @@ function App() {
 
 ### Adding Middlewares
 
-Middlewares can be added by passing an array as a second parameter.
+Middlewares can be added by passing an array as `middlewares` in the second parameter.
 
 ```typescript
 import { createSimple } from 'zustand-tools'
 import { devtools } from 'zustand/middleware'
 
-const demoStore = createSimple({ foo: 'bar' }, [(initializer) => devtools(initializer, { enabled: true })])
+const demoStore = createSimple({ foo: 'bar' }, { middlewares: [(initializer) => devtools(initializer, { enabled: true })] })
 ```
 
 ### createSimpleContext(initStore, middlewares)
