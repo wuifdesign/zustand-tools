@@ -29,6 +29,7 @@
     "test:lint": "eslint \"./src/**/*.{js,ts,tsx}\""
   },
   "dependencies": {
+    "deepmerge": "^4.2.2",
     "zustand": "^4.1.4"
   },
   "peerDependencies": {

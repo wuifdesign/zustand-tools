@@ -1,9 +1,9 @@
-import { simpleZustandCreate } from './simple-zustand-create'
+import { createSimple } from './create-simple'
 import { act, renderHook } from '@testing-library/react'
 
-describe('simpleZustandCreate', () => {
+describe('createSimple', () => {
   it('should export getter and setter', () => {
-    const { store } = simpleZustandCreate({
+    const { store } = createSimple({
       foo: 1,
       bar: 2
     })
@@ -14,7 +14,7 @@ describe('simpleZustandCreate', () => {
   })
 
   it('should export hooks', () => {
-    const { hooks } = simpleZustandCreate({ foo: 1 })
+    const { hooks } = createSimple({ foo: 1 })
     const { result } = renderHook(() => hooks.useFoo())
     expect(result.current).toEqual([1, expect.any(Function)])
     act(() => {

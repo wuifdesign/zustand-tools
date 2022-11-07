@@ -1,6 +1,6 @@
-import { InitStateType, SimpleZustandHooksType, UseBoundStoreType } from './simple-zustand-create.type'
-import { ucFirst } from '../utils/uc-first'
 import React, { useContext } from 'react'
+import { CreateSimpleHooksType, InitStateType, UseBoundStoreType } from '../types'
+import { ucFirst } from './uc-first'
 
 type CreateHooksObjectOptions<T extends InitStateType> = {
   initState: T
@@ -21,5 +21,5 @@ export const createHooksObject = <T extends InitStateType>({
       return [localStore((state) => state[key]), localStore.getState()['set' + ucFirst(key)]]
     }
   }
-  return hooks as SimpleZustandHooksType<T>
+  return hooks as CreateSimpleHooksType<T>
 }

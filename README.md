@@ -8,11 +8,20 @@ Tools for simpler [zustand](https://github.com/pmndrs/zustand) usage.
 ## Installation 
 
 ```bash
-yarn add zustand-tools
-
-npm i zustand-tools --save
+npm i zustand-tools
 ```
 
 ## Documentation
 
-WIP
+### createSimple(initStore, middlewares)
+
+### Adding Middlewares
+
+Middlewares can be added by passing an array as a second parameter.
+
+```typescript
+import { createSimple } from 'zustand-tools'
+import { devtools } from 'zustand/middleware'
+
+const dempStore = createSimple({ foo: 'bar' }, [(initializer) => devtools(initializer, { enabled: true })])
+```

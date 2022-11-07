@@ -1,32 +1,36 @@
 import React, { useEffect } from 'react'
-import { simpleZustandCreate } from './lib'
-import { useStore } from 'zustand'
+import { createSimple, createSimpleContext } from './lib'
 
-const { hooks, context } = simpleZustandCreate({
+const { hooks } = createSimple({
   foo: 1,
   bar: 2
 })
 
-const useFoo = hooks.useFoo
-
-const Provider = context.Provider
-const useContextBar = context.hooks.useBar
+const { Provider, hooks: contextHooks } = createSimpleContext({
+  foo: 1,
+  bar: 2
+})
 
 function Child() {
-  const [bar] = useContextBar()
+  const [foo] = contextHooks.useFoo()
+  const [bar] = contextHooks.useBar()
 
-  return <div>{bar}</div>
+  return (
+    <div>
+      {foo} : {bar}
+    </div>
+  )
 }
 
 function App() {
-  const [foo, setFoo] = useFoo()
+  const [foo, setFoo] = hooks.useFoo()
 
   useEffect(() => {
     setFoo(5)
   }, [setFoo])
 
   return (
-    <Provider value={{ a: 1 } as any}>
+    <Provider initialValues={{ foo: 1000 }}>
       {foo} <Child />
     </Provider>
   )
