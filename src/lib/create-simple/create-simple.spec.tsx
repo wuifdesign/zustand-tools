@@ -40,6 +40,12 @@ describe('createSimple', () => {
     expect(result.current[0]).toBe(5)
   })
 
+  it('should export all data hook', () => {
+    const { hooks } = createSimple({ foo: 1, bar: 2 })
+    const { result } = renderHook(() => hooks.useAllData())
+    expect(result.current).toEqual({ foo: 1, bar: 2 })
+  })
+
   it('should create with middleware', () => {
     const { getState } = createSimple(
       { foo: 1 },

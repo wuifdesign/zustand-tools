@@ -36,6 +36,17 @@ describe('simpleZustandCreate', () => {
     expect(result.current[0]).toBe(5)
   })
 
+  it('should export all data hook', () => {
+    const { Provider, hooks } = createSimpleContext({ foo: 1, bar: 2 })
+
+    const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+      <Provider initialValues={{ foo: 20 }}>{children}</Provider>
+    )
+
+    const { result } = renderHook(() => hooks.useAllData(), { wrapper })
+    expect(result.current).toEqual({ bar: 2, foo: 20 })
+  })
+
   it('should create with middleware', () => {
     const { Provider, hooks } = createSimpleContext(
       { foo: 1 },

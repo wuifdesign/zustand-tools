@@ -72,6 +72,17 @@ function App() {
 }
 ```
 
+## Special Hook: `useAllData()`
+
+This special hook will return all data from the store using a shallow compare. 
+
+```typescript
+import { createSimple } from 'zustand-tools'
+
+const demoStore = createSimple({ foo: 1, bar: 2 })
+// useAllData() -> { foo: 1, bar: 2 }
+```
+
 ## Adding Middlewares
 
 Middlewares can be added by passing an array as `middlewares` in the second parameter.
