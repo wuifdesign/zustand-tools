@@ -28,6 +28,7 @@ describe('createSimple', () => {
     expect(getState().bar).toBe(2)
     getState().setFoo(3)
     expect(getState().foo).toBe(3)
+    expect(getState().bar).toBe(2)
   })
 
   it('should export hooks', () => {
