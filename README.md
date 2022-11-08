@@ -11,13 +11,9 @@ Tools for simpler [zustand](https://github.com/pmndrs/zustand) usage with [react
 npm i zustand-tools
 ```
 
-## Documentation
-
-### createSimple(initStore, middlewares)
+## createSimple(initStore, middlewares)
 
 Creates a simple store with correct typings and hooks for easier usage.
-
-e.g.:
 
 ```tsx
 import { createSimple } from 'zustand-tools'
@@ -43,25 +39,11 @@ function App() {
 }
 ```
 
-
-### Adding Middlewares
-
-Middlewares can be added by passing an array as `middlewares` in the second parameter.
-
-```typescript
-import { createSimple } from 'zustand-tools'
-import { devtools } from 'zustand/middleware'
-
-const demoStore = createSimple({ foo: 'bar' }, { middlewares: [(initializer) => devtools(initializer, { enabled: true })] })
-```
-
-### createSimpleContext(initStore, middlewares)
+## createSimpleContext(initStore, middlewares)
 
 Basically the same as `createSimple` but return a provider to use the store only for a specific context.
 
 `initialValues` can be used to override the `defaultValues` provided on creation. It will be merged with `defaultValues`.
-
-e.g.:
 
 ```tsx
 import { createSimpleContext } from 'zustand-tools'
@@ -88,4 +70,15 @@ function App() {
     </Provider>
   )
 }
+```
+
+## Adding Middlewares
+
+Middlewares can be added by passing an array as `middlewares` in the second parameter.
+
+```typescript
+import { createSimple } from 'zustand-tools'
+import { devtools } from 'zustand/middleware'
+
+const demoStore = createSimple({ foo: 'bar' }, { middlewares: [(initializer) => devtools(initializer, { enabled: true })] })
 ```
