@@ -1,12 +1,14 @@
 import { InitStateType } from './init-state-type'
 import { StateCreator, StoreApi } from 'zustand'
 
-type MiddlewareOptionType<T extends InitStateType> = (initializer: StateCreator<T>) => StateCreator<T, any, any>
+type MiddlewareOptionType<State extends InitStateType> = (
+  initializer: StateCreator<State>
+) => StateCreator<State, any, any>
 
-export type ActionsType<T> = (
-  setState: StoreApi<T>['setState'],
-  getState: StoreApi<T>['getState'],
-  store: StoreApi<T>
+export type ActionsType<State> = (
+  setState: StoreApi<State>['setState'],
+  getState: StoreApi<State>['getState'],
+  store: StoreApi<State>
 ) => Record<string, Function>
 
 export type CreateSimpleOptions<T extends InitStateType, A extends ActionsType<T>> = {

@@ -1,6 +1,6 @@
 import { StateCreator, StoreApi } from 'zustand'
 
-export type MiddlewareType<T extends any = any> = (
-  config: StateCreator<T>,
+export type MiddlewareType<State extends any = any> = (
+  config: StateCreator<State>,
   options: any
-) => (set: StoreApi<T>['setState'], get: StoreApi<T>['getState'], api: StoreApi<T>) => T
+) => (set: StoreApi<State>['setState'], get: StoreApi<State>['getState'], api: StoreApi<State>) => State

@@ -12,11 +12,11 @@ const createState = (initState: InitStateType, set: StoreApi<InitStateType>['set
   return state
 }
 
-export const createStore = <T extends InitStateType, A extends ActionsType<T>>(
-  initState: T,
-  { middlewares = [], actions }: CreateSimpleOptions<T, A> = {}
+export const createStore = <State extends InitStateType, Actions extends ActionsType<State>>(
+  initState: State,
+  { middlewares = [], actions }: CreateSimpleOptions<State, Actions> = {}
 ) => {
-  let initializer: StateCreator<CreateSimpleType<T> & ReturnType<A>> = (set, get, api) => ({
+  let initializer: StateCreator<CreateSimpleType<State> & ReturnType<Actions>> = (set, get, api) => ({
     ...createState(initState, set),
     ...(actions ? actions(set, get, api) : {})
   })

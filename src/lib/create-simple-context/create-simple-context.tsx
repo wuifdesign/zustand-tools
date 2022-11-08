@@ -7,19 +7,19 @@ import { ActionsType, CreateSimpleOptions } from '../types/create-simple-options
 import shallow from 'zustand/shallow'
 import { filterObjectByKey } from '../utils/filter-object-by-key'
 
-export const createSimpleContext = <T extends InitStateType, A extends ActionsType<T>>(
-  defaultState: T,
-  options: CreateSimpleOptions<T, A> = {}
+export const createSimpleContext = <State extends InitStateType, Actions extends ActionsType<State>>(
+  defaultState: State,
+  options: CreateSimpleOptions<State, Actions> = {}
 ) => {
-  const StoreContext = createContext<UseBoundStoreType<T & ReturnType<A>>>(null as any)
+  const StoreContext = createContext<UseBoundStoreType<State & ReturnType<Actions>>>(null as any)
 
-  const Provider: React.FC<{ initialValues?: DeepPartial<T>; children: React.ReactNode }> = ({
+  const Provider: React.FC<{ initialValues?: DeepPartial<State>; children: React.ReactNode }> = ({
     children,
     initialValues = {}
   }) => {
-    const useStore = useRef<UseBoundStoreType<T & ReturnType<A>>>()
+    const useStore = useRef<UseBoundStoreType<State & ReturnType<Actions>>>()
     if (!useStore.current) {
-      const mergedValues = deepmerge<T>(defaultState, initialValues)
+      const mergedValues = deepmerge<State>(defaultState, initialValues)
       useStore.current = createStore(mergedValues, options)
     }
     return <StoreContext.Provider value={useStore.current}>{children}</StoreContext.Provider>
@@ -33,7 +33,7 @@ export const createSimpleContext = <T extends InitStateType, A extends ActionsTy
         const useLocalStore = useContext(StoreContext!)
         return useLocalStore((state) => filterObjectByKey(state, (key) => !key.startsWith('set')), shallow)
       },
-      ...createHooksObject<T, A>({ initState: defaultState, StoreContext })
+      ...createHooksObject<State, Actions>({ initState: defaultState, StoreContext })
     }
   }
 }
