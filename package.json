@@ -26,7 +26,8 @@
     "start-react-app": "react-scripts start",
     "test": "npm run test:unit && npm run test:lint",
     "test:unit": "react-scripts test --ci --watchAll=false",
-    "test:lint": "eslint \"./src/**/*.{js,ts,tsx}\""
+    "test:lint": "eslint \"./src/**/*.{js,ts,tsx}\"",
+    "test:typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "deepmerge": "^4.2.2",

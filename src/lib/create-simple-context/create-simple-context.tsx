@@ -5,10 +5,7 @@ import { createStore } from '../utils/create-store'
 import deepmerge from 'deepmerge'
 import { CreateSimpleOptions } from '../types/create-simple-options'
 
-export const createSimpleContext = <T extends InitStateType>(
-  defaultState: T,
-  { middlewares = [] }: CreateSimpleOptions<T> = {}
-) => {
+export const createSimpleContext = <T extends InitStateType>(defaultState: T, options: CreateSimpleOptions<T> = {}) => {
   const StoreContext = createContext<UseBoundStoreType<T>>(null as any)
 
   const Provider: React.FC<{ initialValues?: DeepPartial<T>; children: React.ReactNode }> = ({
@@ -18,7 +15,7 @@ export const createSimpleContext = <T extends InitStateType>(
     const store = useRef<UseBoundStoreType<T>>()
     if (!store.current) {
       const mergedValues = deepmerge<T>(defaultState, initialValues)
-      store.current = createStore(mergedValues, { middlewares })
+      store.current = createStore(mergedValues, options)
     }
     return <StoreContext.Provider value={store.current}>{children}</StoreContext.Provider>
   }
