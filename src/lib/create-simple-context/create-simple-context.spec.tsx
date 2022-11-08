@@ -66,4 +66,25 @@ describe('simpleZustandCreate', () => {
     expect(middlewareMock).toBeCalledTimes(1)
     expect(middlewareMock).toBeCalledWith('TestValue')
   })
+
+  it('should create additional actions', () => {
+    const { Provider, hooks } = createSimpleContext(
+      { foo: 1 },
+      {
+        actions: (set) => ({
+          increaseFoo: (amount: number) => set((state) => ({ foo: state.foo + amount }))
+        })
+      }
+    )
+
+    const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+      <Provider initialValues={{ foo: 20 }}>{children}</Provider>
+    )
+
+    const { result } = renderHook(() => hooks.useStore(), { wrapper })
+    const getState = result.current.getState
+    expect(getState().foo).toBe(20)
+    getState().increaseFoo(5)
+    expect(getState().foo).toBe(25)
+  })
 })

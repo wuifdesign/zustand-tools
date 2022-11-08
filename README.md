@@ -83,6 +83,25 @@ const demoStore = createSimple({ foo: 1, bar: 2 })
 // useAllData() -> { foo: 1, bar: 2 }
 ```
 
+## Adding Additional Actions
+
+If needed you can add additional actions to the generated store.
+
+```typescript
+import { createSimple } from 'zustand-tools'
+
+const { hooks, getState } = createSimple(
+  { foo: 1 },
+  {
+    actions: (set) => ({
+      increaseFoo: (amount: number) => set((state) => ({ foo: state.foo + amount }))
+    })
+  }
+)
+
+getState().increaseFoo(5)
+```
+
 ## Adding Middlewares
 
 Middlewares can be added by passing an array as `middlewares` in the second parameter.

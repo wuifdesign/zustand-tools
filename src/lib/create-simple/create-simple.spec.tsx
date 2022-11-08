@@ -59,4 +59,18 @@ describe('createSimple', () => {
     expect(middlewareMock).toBeCalledTimes(1)
     expect(middlewareMock).toBeCalledWith('TestValue')
   })
+
+  it('should create additional actions', () => {
+    const { getState } = createSimple(
+      { foo: 1 },
+      {
+        actions: (set) => ({
+          increaseFoo: (amount: number) => set((state) => ({ foo: state.foo + amount }))
+        })
+      }
+    )
+    expect(getState().foo).toBe(1)
+    getState().increaseFoo(5)
+    expect(getState().foo).toBe(6)
+  })
 })

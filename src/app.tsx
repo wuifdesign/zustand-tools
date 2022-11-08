@@ -1,10 +1,17 @@
 import React, { useEffect } from 'react'
 import { createSimple, createSimpleContext } from './lib'
 
-const { hooks } = createSimple({
-  foo: 1,
-  bar: 2
-})
+const { hooks, getState } = createSimple(
+  {
+    foo: 1,
+    bar: 2
+  },
+  {
+    actions: (set) => ({
+      increaseFoo: (amount: number) => set((state) => ({ foo: state.foo + amount }))
+    })
+  }
+)
 
 const { Provider, hooks: contextHooks } = createSimpleContext({
   foo: 1,
@@ -27,6 +34,7 @@ function App() {
 
   useEffect(() => {
     setFoo(5)
+    getState().increaseFoo(4)
   }, [setFoo])
 
   return (

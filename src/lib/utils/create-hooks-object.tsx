@@ -1,18 +1,19 @@
 import React, { useContext } from 'react'
 import { CreateSimpleHooksType, InitStateType, UseBoundStoreType } from '../types'
 import { ucFirst } from './uc-first'
+import { ActionsType } from '../types/create-simple-options'
 
-type CreateHooksObjectOptions<T extends InitStateType> = {
+type CreateHooksObjectOptions<T extends InitStateType, A extends ActionsType<T>> = {
   initState: T
-  store?: UseBoundStoreType<T>
-  StoreContext?: React.Context<UseBoundStoreType<T>>
+  store?: UseBoundStoreType<T & ReturnType<A>>
+  StoreContext?: React.Context<UseBoundStoreType<T & ReturnType<A>>>
 }
 
-export const createHooksObject = <T extends InitStateType>({
+export const createHooksObject = <T extends InitStateType, A extends ActionsType<T>>({
   initState,
   store,
   StoreContext
-}: CreateHooksObjectOptions<T>) => {
+}: CreateHooksObjectOptions<T, A>) => {
   const hooks: Record<string, any> = {}
   for (const key of Object.keys(initState)) {
     hooks['use' + ucFirst(key)] = () => {

@@ -1,7 +1,7 @@
 import { CreateSimpleType, InitStateType } from '../types'
 import { ucFirst } from './uc-first'
 import create, { StateCreator, StoreApi } from 'zustand'
-import { CreateSimpleOptions } from '../types/create-simple-options'
+import { ActionsType, CreateSimpleOptions } from '../types/create-simple-options'
 
 const createState = (initState: InitStateType, set: StoreApi<InitStateType>['setState']): any => {
   const state: Record<string, any> = {}
@@ -12,11 +12,14 @@ const createState = (initState: InitStateType, set: StoreApi<InitStateType>['set
   return state
 }
 
-export const createStore = <T extends InitStateType>(
+export const createStore = <T extends InitStateType, A extends ActionsType<T>>(
   initState: T,
-  { middlewares = [] }: CreateSimpleOptions<T> = {}
+  { middlewares = [], actions }: CreateSimpleOptions<T, A> = {}
 ) => {
-  let initializer: StateCreator<CreateSimpleType<T>> = (set) => createState(initState, set)
+  let initializer: StateCreator<CreateSimpleType<T> & ReturnType<A>> = (set, get, api) => ({
+    ...createState(initState, set),
+    ...(actions ? actions(set, get, api) : {})
+  })
   for (const middleware of middlewares) {
     initializer = middleware(initializer)
   }
