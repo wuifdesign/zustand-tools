@@ -21,8 +21,8 @@ import { createSimple } from 'zustand-tools'
 const demoStore = createSimple({ foo: 'bar' })
 /*
  * will provide:
- * demoStore.getState().foo
- * demoStore.getState().setFoo(value)
+ * demoStore.useStore.getState().foo
+ * demoStore.useStore.getState().setFoo(value)
  * demoStore.hooks.useFoo() => [value, setter] // like useState
  */
 
@@ -80,7 +80,7 @@ This special hook will return all data from the store using a shallow compare.
 import { createSimple } from 'zustand-tools'
 
 const demoStore = createSimple({ foo: 1, bar: 2 })
-// useAllData() -> { foo: 1, bar: 2 }
+// demoStore.hooks.useAllData() -> { foo: 1, bar: 2 }
 ```
 
 ## Adding Additional Actions
@@ -90,7 +90,7 @@ If needed you can add additional actions to the generated store.
 ```typescript
 import { createSimple } from 'zustand-tools'
 
-const { hooks, getState } = createSimple(
+const { useStore } = createSimple(
   { foo: 1 },
   {
     actions: (set) => ({
@@ -99,7 +99,7 @@ const { hooks, getState } = createSimple(
   }
 )
 
-getState().increaseFoo(5)
+useStore.getState().increaseFoo(5)
 ```
 
 ## Adding Middlewares
