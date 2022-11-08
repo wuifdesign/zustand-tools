@@ -11,7 +11,7 @@ export type ActionsType<State> = (
   store: StoreApi<State>
 ) => Record<string, Function>
 
-export type CreateSimpleOptions<T extends InitStateType, A extends ActionsType<T>> = {
-  actions?: A
-  middlewares?: MiddlewareOptionType<T & ReturnType<A>>[]
+export type CreateSimpleOptions<State extends InitStateType, Actions extends ActionsType<State>> = {
+  actions?: Actions
+  middlewares?: MiddlewareOptionType<State & ReturnType<Actions>>[]
 }
