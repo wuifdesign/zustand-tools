@@ -11,7 +11,7 @@ export const createSimple = <T extends InitStateType, A extends ActionsType<T>>(
 ) => {
   const useStore = createStore(initState, options)
   return {
-    ...useStore,
+    useStore,
     hooks: {
       useAllData: () => useStore((state) => filterObjectByKey(state, (key) => !key.startsWith('set')), shallow),
       ...createHooksObject<T, A>({ initState, store: useStore })

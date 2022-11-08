@@ -20,7 +20,9 @@ describe('createSimple', () => {
   })
 
   it('should export getter and setter', () => {
-    const { getState } = createSimple({
+    const {
+      useStore: { getState }
+    } = createSimple({
       foo: 1,
       bar: 2
     })
@@ -48,10 +50,9 @@ describe('createSimple', () => {
   })
 
   it('should create with middleware', () => {
-    const { getState } = createSimple(
-      { foo: 1 },
-      { middlewares: [(initializer) => demoMiddleware(initializer, 'TestValue')] }
-    )
+    const {
+      useStore: { getState }
+    } = createSimple({ foo: 1 }, { middlewares: [(initializer) => demoMiddleware(initializer, 'TestValue')] })
     expect(middlewareMock).toBeCalledTimes(0)
     expect(getState().foo).toBe(1)
     getState().setFoo(3)
@@ -61,7 +62,9 @@ describe('createSimple', () => {
   })
 
   it('should create additional actions', () => {
-    const { getState } = createSimple(
+    const {
+      useStore: { getState }
+    } = createSimple(
       { foo: 1 },
       {
         actions: (set) => ({

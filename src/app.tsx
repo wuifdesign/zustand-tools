@@ -1,7 +1,10 @@
 import React, { useEffect } from 'react'
 import { createSimple, createSimpleContext } from './lib'
 
-const { hooks, getState } = createSimple(
+const {
+  hooks,
+  useStore: { getState }
+} = createSimple(
   {
     foo: 1,
     bar: 2
