@@ -2,6 +2,7 @@
   "name": "zustand-tools",
   "version": "0.0.5",
   "description": "Tools for simple zustand usage",
+  "keywords": ["zustand", "toolkit", "tools", "helper", "simple", "react", "state management"],
   "author": "wuifdesign",
   "license": "MIT",
   "repository": "https://github.com/wuifdesign/zustand-tools",
