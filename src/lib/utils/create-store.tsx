@@ -1,6 +1,6 @@
 import { CreateSimpleType, InitStateType } from '../types'
 import { ucFirst } from './uc-first'
-import create, { StateCreator, StoreApi } from 'zustand'
+import { create, StateCreator, StoreApi } from 'zustand'
 import { ActionsType, CreateSimpleOptions } from '../types/create-simple-options'
 
 const createState = (initState: InitStateType, set: StoreApi<InitStateType>['setState']): any => {

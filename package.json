@@ -1,6 +1,6 @@
 {
   "name": "zustand-tools",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Tools for simple zustand usage",
   "keywords": ["zustand", "toolkit", "tools", "helper", "simple", "react", "state management"],
   "author": "wuifdesign",
@@ -28,8 +28,8 @@
     "test:typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "deepmerge": "^4.2.2",
-    "zustand": "^4.1.4"
+    "deepmerge": "^4.3.0",
+    "zustand": "^4.3.3"
   },
   "peerDependencies": {
     "react": "^18.0.0",
@@ -37,27 +37,27 @@
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.4.0",
+    "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^14.4.3",
-    "@types/jest": "^29.2.2",
-    "@types/node": "^18.11.9",
-    "@types/react": "^18.0.25",
-    "@types/react-dom": "^18.0.8",
-    "eslint-config-prettier": "^8.5.0",
+    "@types/jest": "^29.4.0",
+    "@types/node": "^18.14.0",
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "eslint-config-prettier": "^8.6.0",
     "eslint-config-standard": "^17.0.0",
-    "eslint-config-standard-react": "^12.0.0",
+    "eslint-config-standard-react": "^13.0.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-promise": "^6.1.1",
-    "husky": "^8.0.1",
-    "prettier": "^2.7.1",
+    "husky": "^8.0.3",
+    "prettier": "^2.8.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
-    "rimraf": "^3.0.2",
-    "typescript": "^4.8.4",
-    "web-vitals": "^3.0.4",
-    "webpack": "5.74.0"
+    "rimraf": "^4.1.2",
+    "typescript": "^4.9.5",
+    "web-vitals": "^3.1.1",
+    "webpack": "5.75.0"
   },
   "publishConfig": {
     "access": "public"
