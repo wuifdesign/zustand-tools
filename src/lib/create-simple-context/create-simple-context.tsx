@@ -4,7 +4,7 @@ import { createHooksObject } from '../utils/create-hooks-object'
 import { createStore } from '../utils/create-store'
 import deepmerge from 'deepmerge'
 import { ActionsType, CreateSimpleOptions } from '../types/create-simple-options'
-import shallow from 'zustand/shallow'
+import { useShallow } from 'zustand/react/shallow'
 import { filterObjectByKey } from '../utils/filter-object-by-key'
 
 export const createSimpleContext = <State extends InitStateType, Actions extends ActionsType<State>>(
@@ -17,7 +17,7 @@ export const createSimpleContext = <State extends InitStateType, Actions extends
     children,
     initialValues = {}
   }) => {
-    const useStore = useRef<UseBoundStoreType<State & ReturnType<Actions>>>()
+    const useStore = useRef<UseBoundStoreType<State & ReturnType<Actions>>>(undefined)
     if (!useStore.current) {
       const mergedValues = deepmerge<State>(defaultState, initialValues)
       useStore.current = createStore(mergedValues, options)
@@ -31,7 +31,7 @@ export const createSimpleContext = <State extends InitStateType, Actions extends
       useStore: () => useContext(StoreContext),
       useAllData: () => {
         const useLocalStore = useContext(StoreContext!)
-        return useLocalStore((state) => filterObjectByKey(state, (key) => !key.startsWith('set')), shallow)
+        return useLocalStore(useShallow((state) => filterObjectByKey(state, (key) => !key.startsWith('set'))))
       },
       ...createHooksObject<State, Actions>({ initState: defaultState, StoreContext })
     }

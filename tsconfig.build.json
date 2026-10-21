@@ -1,12 +1,17 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es2015",
+    "target": "es2020",
     "declaration": true,
     "esModuleInterop": true,
     "outDir": "./dist",
+    "rootDir": "./src/lib",
     "jsx": "react-jsx"
   },
+  "exclude": [
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx"
+  ],
   "include": [
     "src/lib/**/*"
   ]

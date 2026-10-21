@@ -1,25 +1,48 @@
 name: Release to NPM
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  release:
-    name: Release to NPM
+  test:
+    name: Test
+    # Publishing is only allowed from main
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 18
+          node-version-file: package.json
           cache: 'npm'
       - run: npm ci
       - run: npm run build
       - run: npm test
         env:
           CI: true
-      - name: Publish to NPM
-        uses: JS-DevTools/npm-publish@v1
+
+  publish:
+    name: Publish to NPM
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # required for npm trusted publishing (OIDC)
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          token: ${{ secrets.NPM_TOKEN }}
+          node-version-file: package.json
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+      - run: npm install -g npm@latest # trusted publishing needs npm >= 11.5.1
+      - run: npm ci
+      - run: npm run build
+      - name: Publish to NPM
+        run: npm publish --provenance --access public

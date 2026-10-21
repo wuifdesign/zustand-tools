@@ -2,7 +2,7 @@ import { InitStateType } from '../types'
 import { createHooksObject } from '../utils/create-hooks-object'
 import { createStore } from '../utils/create-store'
 import { ActionsType, CreateSimpleOptions } from '../types/create-simple-options'
-import shallow from 'zustand/shallow'
+import { useShallow } from 'zustand/react/shallow'
 import { filterObjectByKey } from '../utils/filter-object-by-key'
 
 export const createSimple = <State extends InitStateType, Actions extends ActionsType<State>>(
@@ -13,7 +13,7 @@ export const createSimple = <State extends InitStateType, Actions extends Action
   return {
     useStore,
     hooks: {
-      useAllData: () => useStore((state) => filterObjectByKey(state, (key) => !key.startsWith('set')), shallow),
+      useAllData: () => useStore(useShallow((state) => filterObjectByKey(state, (key) => !key.startsWith('set')))),
       ...createHooksObject<State, Actions>({ initState, store: useStore })
     }
   }

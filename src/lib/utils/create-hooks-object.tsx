@@ -17,7 +17,7 @@ export const createHooksObject = <State extends InitStateType, Actions extends A
   const hooks: Record<string, any> = {}
   for (const key of Object.keys(initState)) {
     hooks['use' + ucFirst(key)] = () => {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
+      // oxlint-disable-next-line react-hooks/rules-of-hooks
       const localStore = store || useContext(StoreContext!)
       return [localStore((state) => state[key]), localStore.getState()['set' + ucFirst(key)]]
     }

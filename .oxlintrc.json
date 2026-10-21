@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "import", "promise", "node"],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "jest": true,
+    "node": true,
+    "browser": true
+  },
+  "settings": {
+    "react": {
+      "version": "19"
+    }
+  },
+  "rules": {
+    "react-hooks/rules-of-hooks": "error",
+    "react/refs": "off",
+    "react-hooks/exhaustive-deps": "warn",
+    "no-unused-vars": "warn",
+    "no-use-before-define": "error",
+    "eqeqeq": ["error", "smart"]
+  }
+}
