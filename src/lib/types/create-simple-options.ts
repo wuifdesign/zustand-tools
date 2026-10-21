@@ -6,12 +6,17 @@ import type { StateCreator, StoreApi } from 'zustand'
 /**
  * `set`, `get` and `store` of the actions see the state and the generated setters. Other custom actions are not part of
  * it: the type of the actions is inferred from this very function, so it can not depend on itself.
+ * An action must not have the name of a state key (it would silently drop the state), overriding a generated setter
+ * is allowed.
  */
 export type ActionsType<State extends InitStateType> = (
   setState: StoreApi<CreateSimpleType<State>>['setState'],
   getState: StoreApi<CreateSimpleType<State>>['getState'],
   store: StoreApi<CreateSimpleType<State>>
-) => Record<string, (...args: never[]) => unknown>
+) => Record<string, (...args: never[]) => unknown> & NoStateKeys<State>
+
+// index signatures have unknown keys, the runtime check covers them
+type NoStateKeys<State extends InitStateType> = string extends keyof State ? unknown : { [Key in keyof State]?: never }
 
 /**
  * The actions added to the state. Without `actions` option `Actions` is inferred as the constraint `ActionsType`, whose

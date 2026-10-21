@@ -129,6 +129,8 @@ const demoStore = createSimple({ foo: 1, bar: 2 })
 // demoStore.hooks.useAllData() -> { foo: 1, bar: 2 }
 ```
 
+The component re-renders whenever any of the values changes. If it only needs some of them, use the hook of the key (`hooks.useFoo()`), which only re-renders when that value changes.
+
 ### Reserved names
 
 Name clashes would silently overwrite state, so they throw an error when the store is created:
@@ -244,7 +246,7 @@ const [user, setUser] = hooks.useUser() // readonly [User | undefined, (value: U
 - State can be a type alias, an interface or an object literal.
 - The types of `set`, `get` and `store` in actions, and the API added by middlewares (`persist`, `subscribeWithSelector`, ...), are inferred as well.
 - `initialValues` of the `Provider` are typed as a deep partial of the state, arrays and class instances are not made partial.
-- The package also exports its helper types: `DeepPartial`, `CreateSimpleType`, `CreateSimpleHooksType`, `CreateSimpleOptions`, `ActionsType`, `UseBoundStoreType`, ...
+- The package also exports its helper types: `DeepPartial`, `CreateSimpleType`, `CreateSimpleHooksType`, `CreateSimpleOptions`, `CreateSimpleProviderProps`, `ActionsType`, `InitStateType` and `UseBoundStoreType`.
 
 ## Changelog
 

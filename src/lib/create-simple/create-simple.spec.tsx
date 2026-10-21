@@ -133,6 +133,7 @@ describe('createSimple', () => {
   })
 
   it('should throw when a state key collides with the built-in all data hook', () => {
+    // @ts-expect-error rejected by the types as well
     expect(() => createSimple({ allData: 1 })).toThrow(/"allData".*"useAllData"/)
   })
 

@@ -2,7 +2,9 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "react", "import", "promise", "node"],
   "categories": {
-    "correctness": "error"
+    "correctness": "error",
+    "perf": "error",
+    "suspicious": "error"
   },
   "env": {
     "jest": true,
@@ -17,6 +19,7 @@
   "rules": {
     "react-hooks/rules-of-hooks": "error",
     "react/refs": "off",
+    "react/react-in-jsx-scope": "off",
     "react-hooks/exhaustive-deps": "warn",
     "no-unused-vars": "error",
     "no-use-before-define": "error",
@@ -30,7 +33,8 @@
       "files": ["**/*.spec.ts", "**/*.spec.tsx", "**/*.bench.ts", "**/*.bench.tsx"],
       "rules": {
         "typescript/no-explicit-any": "off",
-        "typescript/no-non-null-assertion": "off"
+        "typescript/no-non-null-assertion": "off",
+        "typescript/no-extraneous-class": "off"
       }
     }
   ]

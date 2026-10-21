@@ -1,5 +1,6 @@
 export * from './create-simple-hooks-type'
 export * from './create-simple-options'
+export * from './create-simple-provider-props'
 export * from './create-simple-type'
 export * from './deep-partial'
 export * from './init-state-type'

@@ -1,4 +1,4 @@
-import type { InitStateType, ValidInitState } from '../types'
+import type { InitStateType, UseAllDataType, ValidInitState } from '../types'
 import { createHooksObject } from '../utils/create-hooks-object'
 import { createStore } from '../utils/create-store'
 import type { ActionsType, CreateSimpleOptions, MiddlewareMutators } from '../types/create-simple-options'
@@ -15,10 +15,11 @@ export const createSimple = <
 ) => {
   const useStore = createStore<State, Actions, MutatorsPerMiddleware>(initState, options)
   const dataKeys = Object.keys(initState) as (keyof State)[]
+  const useAllData: UseAllDataType<State> = () => useStore(useShallow((state) => pickKeys(state, dataKeys)))
   return {
     useStore,
     hooks: {
-      useAllData: () => useStore(useShallow((state) => pickKeys(state, dataKeys))),
+      useAllData,
       ...createHooksObject<State, Actions, MiddlewareMutators<MutatorsPerMiddleware>>({
         initState,
         store: useStore,

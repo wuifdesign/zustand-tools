@@ -2,6 +2,14 @@ name: Release to NPM
 
 # Release flow: `npm version <patch|minor|major>` (bumps package.json and creates the tag `vX.Y.Z`),
 # then `git push --follow-tags`. Tags with a prerelease suffix (e.g. v1.0.0-beta.1) are published with the `next` dist-tag.
+#
+# The `package` job checks the release and the package, the `publish` job builds and publishes it. The publish job runs
+# in the `npm-release` environment: add required reviewers there to approve releases manually.
+# Every job can be re-run on its own: publish and release are skipped when they already happened.
+#
+# The publish job only stages the package (`npm stage publish`, never needs 2FA). A maintainer has to approve it with
+# 2FA (`npm stage approve <stage-id>` or the "Staged Packages" tab on npmjs.com) before it is public. The GitHub release
+# is created as a draft: publish it once the staged package is approved.
 on:
   push:
     tags:
@@ -10,25 +18,31 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   test:
     name: Test
     uses: ./.github/workflows/lint-and-test.yml
 
-  publish:
-    name: Publish to NPM
+  package:
+    name: Check the release and the package
     needs: test
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # create the GitHub release
-      id-token: write # required for npm trusted publishing (OIDC)
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      npm-tag: ${{ steps.release.outputs.npm-tag }}
+      prerelease: ${{ steps.release.outputs.prerelease }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0 # needed to check that the tag is part of main
 
       - name: Check release is allowed
+        id: release
         run: |
           VERSION=$(node -p "require('./package.json').version")
           if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
@@ -39,28 +53,74 @@ jobs:
             echo "::error::Tag $GITHUB_REF_NAME is not on main, releases are only allowed from main"
             exit 1
           fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           if [[ "$VERSION" == *-* ]]; then
-            echo "NPM_TAG=next" >> "$GITHUB_ENV"
-            echo "RELEASE_FLAGS=--prerelease" >> "$GITHUB_ENV"
+            echo "npm-tag=next" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
           else
-            echo "NPM_TAG=latest" >> "$GITHUB_ENV"
-            echo "RELEASE_FLAGS=--latest" >> "$GITHUB_ENV"
+            echo "npm-tag=latest" >> "$GITHUB_OUTPUT"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: package.json
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - run: npm run lint:package
+
+  publish:
+    name: Stage package on NPM
+    needs: package
+    runs-on: ubuntu-latest
+    environment: npm-release
+    permissions:
+      contents: read
+      id-token: write # required for npm trusted publishing (OIDC)
+
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version-file: package.json
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
-      - run: npm install -g npm@11.19.1 # pinned, trusted publishing needs npm >= 11.5.1
+      - run: npm install -g npm@11.19.1 # pinned, trusted publishing needs npm >= 11.5.1 and `npm stage` >= 11.15.0
       - run: npm ci
       - run: npm run build
-      - name: Publish to NPM
-        # --ignore-scripts: already built above and tested by the test job (prepack/prepublishOnly would repeat both)
-        run: npm publish --ignore-scripts --provenance --access public --tag "$NPM_TAG"
+      - name: Stage on NPM
+        env:
+          VERSION: ${{ needs.package.outputs.version }}
+          NPM_TAG: ${{ needs.package.outputs.npm-tag }}
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          if npm view "$NAME@$VERSION" version > /dev/null 2>&1; then
+            echo "$NAME@$VERSION is already published, nothing to stage"
+          else
+            # --ignore-scripts: already built above and tested by the test job (prepack/prepublishOnly would repeat both)
+            npm stage publish --ignore-scripts --provenance --access public --tag "$NPM_TAG"
+          fi
 
-      # after publishing, so a failed publish never leaves a release behind
+  # separate job: a failed release never blocks a re-run of the staging, a failed staging never leaves a release behind
+  release:
+    name: Create GitHub release
+    needs: [package, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the GitHub release
+
+    steps:
       - name: Create GitHub release
-        run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes $RELEASE_FLAGS
         env:
           GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ needs.package.outputs.prerelease }}
+        run: |
+          # draft: the package is only staged, it is public after the approval on npm
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists, nothing to do"
+            exit 0
+          fi
+          if [ "$PRERELEASE" = "true" ]; then FLAG=--prerelease; else FLAG=--latest; fi
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes --draft "$FLAG"

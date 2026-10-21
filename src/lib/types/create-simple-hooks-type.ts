@@ -4,3 +4,6 @@ export type CreateSimpleHooksType<State extends object> = {
     (value: State[Property]) => void
   ]
 }
+
+/** The data of the store (without setters and actions), like `useAllData` returns it. */
+export type UseAllDataType<State extends object> = () => Pick<State, keyof State>

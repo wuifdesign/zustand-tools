@@ -6,32 +6,35 @@ import { getKeyNames } from './key-names'
 import type { ActionsResult, ActionsType } from '../types/create-simple-options'
 import { useStoreContext } from './use-store-context'
 
+type HooksSource<State extends InitStateType, Actions extends ActionsType<State>, Mutators> =
+  | { store: UseBoundStoreType<State, ActionsResult<Actions>, Mutators> }
+  | { StoreContext: Context<UseBoundStoreType<State, ActionsResult<Actions>, Mutators> | null> }
+
+// either a store or a StoreContext, the types do not allow both or none
 type CreateHooksObjectOptions<State extends InitStateType, Actions extends ActionsType<State>, Mutators> = {
   initState: State
-  store?: UseBoundStoreType<State, ActionsResult<Actions>, Mutators>
-  StoreContext?: Context<UseBoundStoreType<State, ActionsResult<Actions>, Mutators> | null>
   reservedHookNames?: string[]
-}
+} & HooksSource<State, Actions, Mutators>
 
 // the generated hooks access the state by string key, the public type is restored once at the end
 type UntypedStore = UseBoundStore<StoreApi<Record<string, unknown>>>
+const asUntyped = (store: unknown) => store as UntypedStore
 
-export const createHooksObject = <State extends InitStateType, Actions extends ActionsType<State>, Mutators = []>({
-  initState,
-  store,
-  StoreContext,
-  reservedHookNames = []
-}: CreateHooksObjectOptions<State, Actions, Mutators>) => {
+export const createHooksObject = <State extends InitStateType, Actions extends ActionsType<State>, Mutators = []>(
+  options: CreateHooksObjectOptions<State, Actions, Mutators>
+) => {
+  const { initState, reservedHookNames = [] } = options
+  if (!('store' in options) && !('StoreContext' in options)) {
+    throw new Error('[zustand-tools] createHooksObject needs either a store or a StoreContext')
+  }
   const hooks: Record<string, () => readonly [unknown, unknown]> = {}
-  const useLocalStore = (hookName: string) => {
-    if (store) {
-      return store as unknown as UntypedStore
+  // `store` never changes after creation, so the same branch (and hook order) is used on every render
+  const useLocalStore = (hookName: string): UntypedStore => {
+    if ('store' in options) {
+      return asUntyped(options.store)
     }
     // oxlint-disable-next-line react-hooks/rules-of-hooks -- `store` never changes after creation, the hook order is stable
-    return useStoreContext(
-      StoreContext as Context<UseBoundStoreType<State, ActionsResult<Actions>, Mutators> | null>,
-      hookName
-    ) as unknown as UntypedStore
+    return asUntyped(useStoreContext(options.StoreContext, hookName))
   }
   for (const key of Object.keys(initState)) {
     const { hookName, setterName } = getKeyNames(key)
@@ -47,9 +50,6 @@ export const createHooksObject = <State extends InitStateType, Actions extends A
       // same tuple as long as the value is the same, so it can be used in dependency arrays
       return useMemo(() => [value, setter] as const, [value, setter])
     }
-  }
-  if (!store && !StoreContext) {
-    throw new Error('[zustand-tools] createHooksObject needs either a store or a StoreContext')
   }
   return hooks as unknown as CreateSimpleHooksType<State>
 }

@@ -1,4 +1,4 @@
-import { createStore } from './create-store'
+import { createStore, planState } from './create-store'
 import { persist, subscribeWithSelector } from 'zustand/middleware'
 
 describe('createStore', () => {
@@ -100,7 +100,13 @@ describe('createStore', () => {
     })
 
     it('should throw when an action has the name of a state key', () => {
+      // @ts-expect-error rejected by the types as well
       expect(() => createStore({ foo: 1 }, { actions: () => ({ foo: () => undefined }) })).toThrow(/action "foo"/)
+    })
+
+    it('should allow actions named like inherited object members', () => {
+      const store = createStore({ foo: 1 }, { actions: () => ({ toString: () => 'store', constructor: () => 1 }) })
+      expect(store.getState().toString()).toBe('store')
     })
 
     it('should still allow an action to override a generated setter', () => {
@@ -110,6 +116,30 @@ describe('createStore', () => {
     it('should allow keys that merely start with "set"', () => {
       const store = createStore({ settings: 1, setup: 2 })
       expect(Object.keys(store.getState()).sort()).toEqual(['settings', 'setSettings', 'setSetup', 'setup'].sort())
+    })
+  })
+
+  describe('planState', () => {
+    it('should list the keys with their setter names', () => {
+      const plan = planState({ foo: 1, barBaz: 2 })
+      expect(plan.keys).toEqual([
+        { key: 'foo', setterName: 'setFoo' },
+        { key: 'barBaz', setterName: 'setBarBaz' }
+      ])
+      expect(plan.keySet.has('barBaz')).toBe(true)
+    })
+
+    it('should create several stores from one plan', () => {
+      const initState = { foo: 1 }
+      const plan = planState(initState)
+      const a = createStore(initState, {}, plan)
+      const b = createStore(initState, {}, plan)
+      a.getState().setFoo(2)
+      expect(b.getState().foo).toBe(1)
+    })
+
+    it('should throw for colliding keys', () => {
+      expect(() => planState({ foo: 1, setFoo: 2 })).toThrow(/"setFoo"/)
     })
   })
 })

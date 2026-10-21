@@ -12,13 +12,15 @@ import type {
 } from '../types/create-simple-options'
 import type { UseBoundStoreType } from '../types/use-bound-store-type'
 
-// the only place where the generated state is created, the cast is safe because every key gets exactly its setter
-const createState = <State extends InitStateType>(
-  initState: State,
-  set: StoreApi<InitStateType>['setState'],
-  get: () => object
-): CreateSimpleType<State> => {
-  const state: Record<string, unknown> = {}
+type PlannedKey = { readonly key: string; readonly setterName: string }
+
+/**
+ * The keys of the state and the names of their setters, validated once. A store only has to create its closures, so
+ * e.g. every `Provider` of `createSimpleContext` can reuse the plan instead of repeating the work on every mount.
+ */
+export type StatePlan = { readonly keys: readonly PlannedKey[]; readonly keySet: ReadonlySet<string> }
+
+export const planState = (initState: InitStateType): StatePlan => {
   const owners = new Map<string, string>()
   const claim = (name: string, owner: string) => {
     const existing = owners.get(name)
@@ -27,11 +29,25 @@ const createState = <State extends InitStateType>(
     }
     owners.set(name, owner)
   }
-  for (const [key, value] of Object.entries(initState)) {
+  const keys = Object.keys(initState).map((key) => {
     claim(key, `state key "${key}"`)
     const { setterName } = getKeyNames(key)
     claim(setterName, `the generated setter of "${key}"`)
-    state[key] = value
+    return { key, setterName }
+  })
+  return { keys, keySet: new Set(keys.map(({ key }) => key)) }
+}
+
+// the only place where the generated state is created, the cast is safe because every key gets exactly its setter
+const createState = <State extends InitStateType>(
+  initState: State,
+  { keys }: StatePlan,
+  set: StoreApi<InitStateType>['setState'],
+  get: () => object
+): CreateSimpleType<State> => {
+  const state: Record<string, unknown> = {}
+  for (const { key, setterName } of keys) {
+    state[key] = (initState as Record<string, unknown>)[key]
     // setting the current value is a no-op, so subscribers (and e.g. persist) are not notified for nothing
     state[setterName] = (value: unknown) => {
       if (!Object.is((get() as Record<string, unknown>)[key], value)) {
@@ -43,9 +59,10 @@ const createState = <State extends InitStateType>(
 }
 
 // overriding a generated setter with an action is intended, shadowing a state key would silently drop the state
-const assertActionsDoNotShadowState = (initState: InitStateType, actions: Record<string, unknown>) => {
+// (`hasOwn` semantics: inherited names like `toString` are no state keys)
+const assertActionsDoNotShadowState = ({ keySet }: StatePlan, actions: Record<string, unknown>) => {
   for (const name of Object.keys(actions)) {
-    if (name in initState) {
+    if (keySet.has(name)) {
       throw new Error(`[zustand-tools] action "${name}" collides with the state key "${name}"`)
     }
   }
@@ -57,12 +74,13 @@ export const createStore = <
   MutatorsPerMiddleware extends readonly unknown[] = unknown[]
 >(
   initState: State,
-  { middlewares, actions }: CreateSimpleOptions<State, Actions, MutatorsPerMiddleware> = {}
+  { middlewares, actions }: CreateSimpleOptions<State, Actions, MutatorsPerMiddleware> = {},
+  plan: StatePlan = planState(initState)
 ): UseBoundStoreType<State, ActionsResult<Actions>, MiddlewareMutators<MutatorsPerMiddleware>> => {
   let initializer: StateCreator<StoreStateType<State, Actions>, [], []> = (set, get, api) => {
-    const state = createState(initState, set, get)
+    const state = createState(initState, plan, set, get)
     const customActions = actions ? actions(set, get, api) : {}
-    assertActionsDoNotShadowState(initState, customActions)
+    assertActionsDoNotShadowState(plan, customActions)
     return { ...state, ...customActions } as StoreStateType<State, Actions>
   }
   for (const middleware of (middlewares ?? []) as readonly MiddlewareOptionType<State, Actions>[]) {

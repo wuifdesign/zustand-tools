@@ -55,9 +55,13 @@ describe('createHooksObject', () => {
   })
 
   it('should throw when a hook name is reserved', () => {
-    expect(() => createHooksObject({ initState: { allData: 1 }, reservedHookNames: ['useAllData'] })).toThrow(
-      /"allData".*"useAllData"/
-    )
+    expect(() =>
+      createHooksObject({
+        initState: { allData: 1 },
+        StoreContext: React.createContext<any>(null),
+        reservedHookNames: ['useAllData']
+      })
+    ).toThrow(/"allData".*"useAllData"/)
   })
 
   it('should throw a helpful error when used without store and context value', () => {
@@ -69,6 +73,7 @@ describe('createHooksObject', () => {
   })
 
   it('should throw on creation without store and context', () => {
+    // @ts-expect-error the types need a store or a StoreContext
     expect(() => createHooksObject({ initState: { foo: 1 } })).toThrow('needs either a store or a StoreContext')
   })
 })

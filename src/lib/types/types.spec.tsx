@@ -7,11 +7,14 @@ import type {
   ActionsType,
   CreateSimpleHooksType,
   CreateSimpleOptions,
+  CreateSimpleProviderProps,
   CreateSimpleType,
   DeepPartial,
   InitStateType,
   UseBoundStoreType
 } from '../index'
+
+const typeOnly = (_check: () => void) => undefined
 
 // everything in here is checked by `tsc --noEmit` (npm run test:typecheck), the runtime part just keeps vitest happy
 describe('types', () => {
@@ -104,6 +107,79 @@ describe('types', () => {
     createSimple({ 1: 'a' })
     // @ts-expect-error numeric keys have no hook name
     createSimpleContext({ 1: 'a' })
+  })
+
+  it('should reject names that collide with generated or built-in names', () => {
+    // never called: the invalid calls only have to fail the type check
+    typeOnly(() => {
+      // @ts-expect-error the hook useAllData is built in
+      createSimple({ allData: 1 })
+      // @ts-expect-error the hook useAllData is built in (any casing of the first letter)
+      createSimple({ AllData: 1 })
+      // @ts-expect-error the hook useStore is built in
+      createSimpleContext({ store: 1 })
+      // @ts-expect-error "foo" would get the setter "setFoo", which is a state key
+      createSimple({ foo: 1, setFoo: 2 })
+      // @ts-expect-error the empty key has no hook name
+      createSimple({ '': 1 })
+      // "store" is only built in for the context version
+      createSimple({ store: 1 })
+    })
+  })
+
+  it('should reject states that are no records of named values', () => {
+    // never called: the invalid calls only have to fail the type check
+    typeOnly(() => {
+      // @ts-expect-error arrays have no named keys
+      createSimple([1, 2])
+      // @ts-expect-error functions have no named keys
+      createSimple(() => 1)
+      // @ts-expect-error a Map is not a record of named values
+      createSimple(new Map<string, number>())
+      // @ts-expect-error a Date is not a record of named values
+      createSimpleContext(new Date())
+    })
+  })
+
+  it('should accept states with an index signature', () => {
+    const { hooks } = createSimple({} as Record<string, number>)
+    expectTypeOf(hooks.useAllData).returns.toEqualTypeOf<Record<string, number>>()
+  })
+
+  it('should reject actions with the name of a state key', () => {
+    // never called: the invalid calls only have to fail the type check
+    typeOnly(() => {
+      // @ts-expect-error a state key would be dropped
+      createSimple({ foo: 1 }, { actions: () => ({ foo: () => undefined }) })
+      // @ts-expect-error a state key would be dropped
+      createSimpleContext({ foo: 1 }, { actions: () => ({ foo: () => undefined }) })
+      // overriding a generated setter is allowed
+      createSimple({ foo: 1 }, { actions: () => ({ setFoo: () => undefined }) })
+    })
+  })
+
+  it('should reject middlewares that are none', () => {
+    // never called: the invalid calls only have to fail the type check
+    typeOnly(() => {
+      // @ts-expect-error not a middleware
+      createSimple({ foo: 1 }, { middlewares: [() => 1] })
+      // @ts-expect-error not a function
+      createSimple({ foo: 1 }, { middlewares: [1] })
+    })
+  })
+
+  it('should type useAllData as the data of the state without setters and actions', () => {
+    const { hooks } = createSimple({ foo: 1, name: 'a' }, { actions: () => ({ increase: () => undefined }) })
+    expectTypeOf(hooks.useAllData).returns.toEqualTypeOf<{ foo: number; name: string }>()
+    const context = createSimpleContext({ foo: 1 })
+    expectTypeOf(context.hooks.useAllData).returns.toEqualTypeOf<{ foo: number }>()
+  })
+
+  it('should export the props of the provider', () => {
+    expectTypeOf<CreateSimpleProviderProps<{ a: { b: number } }>>().toEqualTypeOf<{
+      initialValues?: { a?: { b?: number } }
+      children: React.ReactNode
+    }>()
   })
 
   it('should not change the hook types when actions are added', () => {

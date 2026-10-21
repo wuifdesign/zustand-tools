@@ -213,7 +213,9 @@ describe('simpleZustandCreate', () => {
   })
 
   it('should throw when a state key collides with a built-in hook', () => {
+    // @ts-expect-error rejected by the types as well
     expect(() => createSimpleContext({ allData: 1 })).toThrow(/"allData".*"useAllData"/)
+    // @ts-expect-error rejected by the types as well
     expect(() => createSimpleContext({ store: 1 })).toThrow(/"store".*"useStore"/)
   })
 
@@ -235,5 +237,17 @@ describe('simpleZustandCreate', () => {
     // @ts-expect-error optional keys do not get a runtime hook, so they are rejected
     createSimpleContext({} as { foo?: number })
     createSimpleContext({ foo: undefined as number | undefined })
+  })
+
+  it('should validate the state when the context is created, not when a Provider mounts', () => {
+    expect(() => createSimpleContext({ foo: 1, setFoo: 2 } as { foo: number })).toThrow(/"setFoo"/)
+  })
+
+  it('should share the default state when no initial values are given', () => {
+    const defaults = { nested: { a: 1 } }
+    const { Provider, hooks } = createSimpleContext(defaults)
+    const wrapper = ({ children }: { children: React.ReactNode }) => <Provider>{children}</Provider>
+    const { result } = renderHook(() => hooks.useNested()[0], { wrapper })
+    expect(result.current).toBe(defaults.nested)
   })
 })
