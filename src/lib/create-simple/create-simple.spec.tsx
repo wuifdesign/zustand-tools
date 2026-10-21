@@ -1,18 +1,20 @@
 import { createSimple } from './create-simple'
 import { act, renderHook } from '@testing-library/react'
-import { MiddlewareType } from '../types'
+import type { StateCreator } from 'zustand'
 
 const middlewareMock = vi.fn()
 
-const demoMiddleware: MiddlewareType = (config, value) => (set, get, api) =>
-  config(
-    (args) => {
-      middlewareMock(value)
-      set(args)
-    },
-    get,
-    api
-  )
+const demoMiddleware =
+  <State,>(config: StateCreator<State>, value: string): StateCreator<State> =>
+  (set, get, api) =>
+    config(
+      (args) => {
+        middlewareMock(value)
+        set(args)
+      },
+      get,
+      api
+    )
 
 describe('createSimple', () => {
   beforeEach(() => {
@@ -96,10 +98,18 @@ describe('createSimple', () => {
     expect(renders).toBe(initial)
   })
 
-  it('should only filter generated setters in all data hook (custom actions are included)', () => {
+  it('should exclude generated setters and custom actions from all data hook', () => {
     const { hooks } = createSimple({ foo: 1 }, { actions: () => ({ doIt: () => undefined }) })
     const { result } = renderHook(() => hooks.useAllData())
-    expect(result.current).toEqual({ foo: 1, doIt: expect.any(Function) })
+    expect(result.current).toEqual({ foo: 1 })
+  })
+
+  it('should include state keys starting with "set" in all data hook', () => {
+    const { hooks, useStore } = createSimple({ settings: { dark: true }, setup: 'done', foo: 1 })
+    const { result } = renderHook(() => hooks.useAllData())
+    expect(result.current).toEqual({ settings: { dark: true }, setup: 'done', foo: 1 })
+    act(() => useStore.getState().setSettings({ dark: false }))
+    expect(result.current).toEqual({ settings: { dark: false }, setup: 'done', foo: 1 })
   })
 
   it('should share state between hooks and store', () => {
@@ -120,5 +130,54 @@ describe('createSimple', () => {
     const b = createSimple({ foo: 1 })
     a.useStore.getState().setFoo(2)
     expect(b.useStore.getState().foo).toBe(1)
+  })
+
+  it('should throw when a state key collides with the built-in all data hook', () => {
+    expect(() => createSimple({ allData: 1 })).toThrow(/"allData".*"useAllData"/)
+  })
+
+  it('should allow a state key named "store"', () => {
+    const { hooks } = createSimple({ store: 1 })
+    const { result } = renderHook(() => hooks.useStore())
+    expect(result.current[0]).toBe(1)
+  })
+
+  it('should store functions as values instead of treating them as updaters', () => {
+    const { useStore } = createSimple({ callback: (() => 'a') as () => string })
+    const next = () => 'b'
+    useStore.getState().setCallback(next)
+    expect(useStore.getState().callback).toBe(next)
+  })
+
+  it('should create hooks for keys with an explicit undefined value', () => {
+    const { hooks, useStore } = createSimple({ user: undefined as { name: string } | undefined })
+    const { result } = renderHook(() => hooks.useUser())
+    expect(result.current[0]).toBeUndefined()
+    act(() => useStore.getState().setUser({ name: 'a' }))
+    expect(result.current[0]).toEqual({ name: 'a' })
+  })
+
+  it('should require every state key to be present in the initial state', () => {
+    // @ts-expect-error optional keys do not get a runtime hook, so they are rejected
+    createSimple({} as { foo?: number })
+    createSimple({ foo: undefined as number | undefined })
+  })
+
+  it('should let actions use the generated setters through get and the store', () => {
+    const { useStore } = createSimple(
+      { foo: 1, bar: 2 },
+      {
+        actions: (_set, get, store) => ({
+          resetFoo: () => get().setFoo(0),
+          resetBar: () => store.getState().setBar(0)
+        })
+      }
+    )
+    useStore.getState().setFoo(5)
+    useStore.getState().setBar(6)
+    useStore.getState().resetFoo()
+    useStore.getState().resetBar()
+    expect(useStore.getState().foo).toBe(0)
+    expect(useStore.getState().bar).toBe(0)
   })
 })

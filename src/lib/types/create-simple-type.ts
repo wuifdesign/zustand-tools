@@ -1,3 +1,3 @@
-export type CreateSimpleType<State extends { [key: string | number | symbol]: any }> = State & {
+export type CreateSimpleType<State extends object> = State & {
   [Property in keyof State as `set${Capitalize<string & Property>}`]: (value: State[Property]) => void
 }

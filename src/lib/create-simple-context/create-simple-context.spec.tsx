@@ -1,19 +1,21 @@
-import { act, renderHook } from '@testing-library/react'
+import { act, render, renderHook, screen } from '@testing-library/react'
 import React from 'react'
 import { createSimpleContext } from './create-simple-context'
-import { MiddlewareType } from '../types'
+import type { StateCreator } from 'zustand'
 
 const middlewareMock = vi.fn()
 
-const demoMiddleware: MiddlewareType = (config, value) => (set, get, api) =>
-  config(
-    (args) => {
-      middlewareMock(value)
-      set(args)
-    },
-    get,
-    api
-  )
+const demoMiddleware =
+  <State,>(config: StateCreator<State>, value: string): StateCreator<State> =>
+  (set, get, api) =>
+    config(
+      (args) => {
+        middlewareMock(value)
+        set(args)
+      },
+      get,
+      api
+    )
 
 describe('simpleZustandCreate', () => {
   it('should create provider', () => {
@@ -97,6 +99,64 @@ describe('simpleZustandCreate', () => {
     expect(result.current).toEqual({ foo: { a: 10, b: 2 }, bar: 1 })
   })
 
+  it('should replace arrays instead of concatenating them', () => {
+    const { Provider, hooks } = createSimpleContext({ list: [1, 2, 3], nested: { tags: ['a'] } })
+    const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+      <Provider initialValues={{ list: [9], nested: { tags: ['b', 'c'] } }}>{children}</Provider>
+    )
+    const { result } = renderHook(() => hooks.useAllData(), { wrapper })
+    expect(result.current).toEqual({ list: [9], nested: { tags: ['b', 'c'] } })
+  })
+
+  it('should keep default arrays when not overridden', () => {
+    const { Provider, hooks } = createSimpleContext({ list: [1, 2], foo: 1 })
+    const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+      <Provider initialValues={{ foo: 2 }}>{children}</Provider>
+    )
+    const { result } = renderHook(() => hooks.useAllData(), { wrapper })
+    expect(result.current).toEqual({ list: [1, 2], foo: 2 })
+  })
+
+  it('should not clone non plain objects from initial values', () => {
+    class Custom {
+      value = 1
+    }
+    const date = new Date(0)
+    const custom = new Custom()
+    const map = new Map([['a', 1]])
+    const { Provider, hooks } = createSimpleContext({
+      date: new Date(1),
+      custom: new Custom(),
+      map: new Map<string, number>()
+    })
+    const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+      <Provider initialValues={{ date, custom, map }}>{children}</Provider>
+    )
+    const { result } = renderHook(() => hooks.useAllData(), { wrapper })
+    expect(result.current.date).toBe(date)
+    expect(result.current.custom).toBe(custom)
+    expect(result.current.map).toBe(map)
+  })
+
+  it('should include state keys starting with "set" and exclude actions in all data hook', () => {
+    const { Provider, hooks } = createSimpleContext(
+      { settings: { dark: true }, setup: 'done' },
+      { actions: () => ({ doIt: () => undefined }) }
+    )
+    const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => <Provider>{children}</Provider>
+    const { result } = renderHook(() => hooks.useAllData(), { wrapper })
+    expect(result.current).toEqual({ settings: { dark: true }, setup: 'done' })
+  })
+
+  it('should ignore undefined initial values', () => {
+    const { Provider, hooks } = createSimpleContext({ foo: 1, bar: { a: 1 } })
+    const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+      <Provider initialValues={{ foo: undefined, bar: { a: undefined } }}>{children}</Provider>
+    )
+    const { result } = renderHook(() => hooks.useAllData(), { wrapper })
+    expect(result.current).toEqual({ foo: 1, bar: { a: 1 } })
+  })
+
   it('should use default state without initial values', () => {
     const { Provider, hooks } = createSimpleContext({ foo: 1 })
     const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => <Provider>{children}</Provider>
@@ -143,10 +203,37 @@ describe('simpleZustandCreate', () => {
     expect(result.current.all).toEqual({ foo: 3, bar: 2 })
   })
 
-  it('should throw when hook is used without provider', () => {
+  it('should throw a helpful error when a hook is used without provider', () => {
     const { hooks } = createSimpleContext({ foo: 1 })
     const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
-    expect(() => renderHook(() => hooks.useFoo())).toThrow()
+    expect(() => renderHook(() => hooks.useFoo())).toThrow('useFoo must be used inside its Provider')
+    expect(() => renderHook(() => hooks.useAllData())).toThrow('useAllData must be used inside its Provider')
+    expect(() => renderHook(() => hooks.useStore())).toThrow('useStore must be used inside its Provider')
     spy.mockRestore()
+  })
+
+  it('should throw when a state key collides with a built-in hook', () => {
+    expect(() => createSimpleContext({ allData: 1 })).toThrow(/"allData".*"useAllData"/)
+    expect(() => createSimpleContext({ store: 1 })).toThrow(/"store".*"useStore"/)
+  })
+
+  it('should only read initial values once, later changes of the prop are ignored', () => {
+    const { Provider, hooks } = createSimpleContext({ foo: 1 })
+    const Child = () => <span data-testid="value">{hooks.useFoo()[0]}</span>
+    const App = ({ foo }: { foo: number }) => (
+      <Provider initialValues={{ foo }}>
+        <Child />
+      </Provider>
+    )
+    const { rerender } = render(<App foo={5} />)
+    expect(screen.getByTestId('value').textContent).toBe('5')
+    rerender(<App foo={9} />)
+    expect(screen.getByTestId('value').textContent).toBe('5')
+  })
+
+  it('should require every state key to be present in the default state', () => {
+    // @ts-expect-error optional keys do not get a runtime hook, so they are rejected
+    createSimpleContext({} as { foo?: number })
+    createSimpleContext({ foo: undefined as number | undefined })
   })
 })

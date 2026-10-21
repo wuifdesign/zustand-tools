@@ -1,18 +1,9 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es2020",
-    "declaration": true,
-    "esModuleInterop": true,
-    "outDir": "./dist",
-    "rootDir": "./src/lib",
-    "jsx": "react-jsx"
+    "noEmit": false,
+    "types": []
   },
-  "exclude": [
-    "src/**/*.spec.ts",
-    "src/**/*.spec.tsx"
-  ],
-  "include": [
-    "src/lib/**/*"
-  ]
+  "include": ["src/lib/**/*"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.spec.tsx", "src/**/*.bench.ts", "src/**/*.bench.tsx"]
 }

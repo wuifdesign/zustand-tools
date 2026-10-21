@@ -88,4 +88,28 @@ describe('createStore', () => {
     expect(restored.getState().bar).toBe(1)
     expect(typeof restored.getState().setFoo).toBe('function')
   })
+
+  describe('name collisions', () => {
+    it('should throw when a state key equals the generated setter of another key', () => {
+      expect(() => createStore({ foo: 1, setFoo: 2 })).toThrow(/"setFoo".*"foo"/)
+      expect(() => createStore({ setFoo: 2, foo: 1 })).toThrow(/"setFoo".*"foo"/)
+    })
+
+    it('should throw when two keys generate the same setter', () => {
+      expect(() => createStore({ foo: 1, Foo: 2 })).toThrow(/"setFoo"/)
+    })
+
+    it('should throw when an action has the name of a state key', () => {
+      expect(() => createStore({ foo: 1 }, { actions: () => ({ foo: () => undefined }) })).toThrow(/action "foo"/)
+    })
+
+    it('should still allow an action to override a generated setter', () => {
+      expect(() => createStore({ foo: 1 }, { actions: () => ({ setFoo: () => undefined }) })).not.toThrow()
+    })
+
+    it('should allow keys that merely start with "set"', () => {
+      const store = createStore({ settings: 1, setup: 2 })
+      expect(Object.keys(store.getState()).sort()).toEqual(['settings', 'setSettings', 'setSetup', 'setup'].sort())
+    })
+  })
 })

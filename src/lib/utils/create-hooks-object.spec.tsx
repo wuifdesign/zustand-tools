@@ -53,4 +53,22 @@ describe('createHooksObject', () => {
     const { result } = renderHook(() => hooks.useFoo(), { wrapper })
     expect(result.current[0]).toBe(1)
   })
+
+  it('should throw when a hook name is reserved', () => {
+    expect(() => createHooksObject({ initState: { allData: 1 }, reservedHookNames: ['useAllData'] })).toThrow(
+      /"allData".*"useAllData"/
+    )
+  })
+
+  it('should throw a helpful error when used without store and context value', () => {
+    const StoreContext = React.createContext<any>(null)
+    const hooks = createHooksObject({ initState: { foo: 1 }, StoreContext })
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    expect(() => renderHook(() => hooks.useFoo())).toThrow('useFoo must be used inside its Provider')
+    spy.mockRestore()
+  })
+
+  it('should throw on creation without store and context', () => {
+    expect(() => createHooksObject({ initState: { foo: 1 } })).toThrow('needs either a store or a StoreContext')
+  })
 })

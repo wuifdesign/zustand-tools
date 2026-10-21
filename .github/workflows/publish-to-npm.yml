@@ -1,7 +1,11 @@
 name: Release to NPM
 
+# Release flow: `npm version <patch|minor|major>` (bumps package.json and creates the tag `vX.Y.Z`),
+# then `git push --follow-tags`. Tags with a prerelease suffix (e.g. v1.0.0-beta.1) are published with the `next` dist-tag.
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: read
@@ -9,40 +13,54 @@ permissions:
 jobs:
   test:
     name: Test
-    # Publishing is only allowed from main
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version-file: package.json
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run build
-      - run: npm test
-        env:
-          CI: true
+    uses: ./.github/workflows/lint-and-test.yml
 
   publish:
     name: Publish to NPM
     needs: test
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # create the GitHub release
       id-token: write # required for npm trusted publishing (OIDC)
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # needed to check that the tag is part of main
+
+      - name: Check release is allowed
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $VERSION"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::Tag $GITHUB_REF_NAME is not on main, releases are only allowed from main"
+            exit 1
+          fi
+          if [[ "$VERSION" == *-* ]]; then
+            echo "NPM_TAG=next" >> "$GITHUB_ENV"
+            echo "RELEASE_FLAGS=--prerelease" >> "$GITHUB_ENV"
+          else
+            echo "NPM_TAG=latest" >> "$GITHUB_ENV"
+            echo "RELEASE_FLAGS=--latest" >> "$GITHUB_ENV"
+          fi
+
       - uses: actions/setup-node@v6
         with:
           node-version-file: package.json
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
-      - run: npm install -g npm@latest # trusted publishing needs npm >= 11.5.1
+      - run: npm install -g npm@11.19.1 # pinned, trusted publishing needs npm >= 11.5.1
       - run: npm ci
       - run: npm run build
       - name: Publish to NPM
-        run: npm publish --provenance --access public
+        # --ignore-scripts: already built above and tested by the test job (prepack/prepublishOnly would repeat both)
+        run: npm publish --ignore-scripts --provenance --access public --tag "$NPM_TAG"
+
+      # after publishing, so a failed publish never leaves a release behind
+      - name: Create GitHub release
+        run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes $RELEASE_FLAGS
+        env:
+          GH_TOKEN: ${{ github.token }}

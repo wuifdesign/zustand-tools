@@ -18,8 +18,20 @@
     "react-hooks/rules-of-hooks": "error",
     "react/refs": "off",
     "react-hooks/exhaustive-deps": "warn",
-    "no-unused-vars": "warn",
+    "no-unused-vars": "error",
     "no-use-before-define": "error",
-    "eqeqeq": ["error", "smart"]
-  }
+    "eqeqeq": ["error", "smart"],
+    "typescript/no-explicit-any": "error",
+    "typescript/consistent-type-imports": "error",
+    "typescript/no-non-null-assertion": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.spec.ts", "**/*.spec.tsx", "**/*.bench.ts", "**/*.bench.tsx"],
+      "rules": {
+        "typescript/no-explicit-any": "off",
+        "typescript/no-non-null-assertion": "off"
+      }
+    }
+  ]
 }

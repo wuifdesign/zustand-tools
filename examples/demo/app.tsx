@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { createSimple, createSimpleContext } from './lib'
+import { createSimple, createSimpleContext } from '../../src/lib'
 
 const {
   hooks,

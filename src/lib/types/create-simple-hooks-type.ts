@@ -1,5 +1,5 @@
-export type CreateSimpleHooksType<State extends { [key: string | number | symbol]: any }> = {
-  [Property in keyof State as `use${Capitalize<string & Property>}`]: () => [
+export type CreateSimpleHooksType<State extends object> = {
+  [Property in keyof State & string as `use${Capitalize<Property>}`]: () => readonly [
     State[Property],
     (value: State[Property]) => void
   ]
