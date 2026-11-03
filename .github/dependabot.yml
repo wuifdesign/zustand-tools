@@ -1,31 +1,19 @@
 version: 2
 
+# Only security updates: `open-pull-requests-limit: 0` disables version updates, while security
+# updates (enabled under Settings > Code security > Dependabot security updates) still open PRs.
 updates:
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
       day: monday
-    # do not pick up releases that are only a few days old
-    cooldown:
-      default-days: 7
-    open-pull-requests-limit: 5
-    groups:
-      dev-dependencies:
-        dependency-type: development
-        update-types:
-          - minor
-          - patch
+    open-pull-requests-limit: 0
 
-  # keeps the SHA pins in the workflows up to date (the version comment next to the SHA is updated as well)
+  # security fixes for the SHA-pinned actions in the workflows
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
       day: monday
-    cooldown:
-      default-days: 7
-    groups:
-      actions:
-        patterns:
-          - '*'
+    open-pull-requests-limit: 0
